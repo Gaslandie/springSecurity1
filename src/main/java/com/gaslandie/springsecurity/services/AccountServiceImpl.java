@@ -13,38 +13,40 @@ import com.gaslandie.springsecurity.repo.AppUserRepository;
 @Service
 @Transactional
 public class AccountServiceImpl implements AccountService {
-    
     private AppUserRepository appUserRepository;
     private AppRoleRepository appRoleRepository;
-
-    @Override
-    public AppUser addNewUser(AppUser appUser) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addNewUser'");
+    
+    //injection des dependences via constructeurs
+    public AccountServiceImpl(AppUserRepository appUserRepository, AppRoleRepository appRoleRepository) {
+        this.appUserRepository = appUserRepository;
+        this.appRoleRepository = appRoleRepository;
     }
 
     @Override
-    public AppUser addNewRole(AppRole appRole) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addNewRole'");
+    public AppUser addNewUser(AppUser appUser) {
+        return appUserRepository.save(appUser);
+    }
+
+    @Override
+    public AppRole addNewRole(AppRole appRole) {
+        return appRoleRepository.save(appRole);
     }
 
     @Override
     public void addRoleToUser(String username, String rolename) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'addRoleToUser'");
+        AppUser appUser = appUserRepository.findByUsername(username);
+        AppRole appRole = appRoleRepository.findByRolename(rolename);
+        appUser.getAppRoles().add(appRole);
     }
 
     @Override
     public AppUser loadUserByUsername(String username) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'loadUserByUsername'");
+        return appUserRepository.findByUsername(username);
     }
 
     @Override
     public List<AppUser> listUsers() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'listUsers'");
+        return appUserRepository.findAll();
     }
     
 }

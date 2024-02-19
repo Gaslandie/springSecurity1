@@ -1,8 +1,10 @@
 package com.gaslandie.springsecurity.entities;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,6 +20,6 @@ public class AppUser {
     private Long id;
     private String username;
     private String password;
-    @ManyToMany
-    private Collection<AppRole> appRoles;
+    @ManyToMany(fetch = FetchType.EAGER)
+    private Collection<AppRole> appRoles = new ArrayList<>();
 }
