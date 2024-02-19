@@ -6,6 +6,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.gaslandie.springsecurity.entities.AppRole;
 import com.gaslandie.springsecurity.entities.AppUser;
@@ -17,6 +19,12 @@ public class SpringsecurityApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(SpringsecurityApplication.class, args);
 	}
+	//@Bean pour mettre dans spring context,utilisation bcrypt pour nos mot de passe
+	@Bean
+	PasswordEncoder passwordEncoder(){
+		return new BCryptPasswordEncoder();
+	}
+
 	@Bean
 	CommandLineRunner start(AccountService accountService){
 		return args -> {
