@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gaslandie.springsecurity.JWTUtil;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -48,12 +49,12 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,Authentication authResult) throws IOException, ServletException {
         User user = (User)authResult.getPrincipal();//pour retourner l'utilisateur authentifié,on caste car getprincipal retourn un objet de type Object
         //generer le token après avoir chercher la bibliotheque auth0 jwt token depuis maeven
-        Algorithm algorithm = Algorithm.HMAC256("cleprivee");
-        
+        Algorithm algorithm = Algorithm.HMAC256(JWTUtil.SECRET);
+
         //les infos du payload de notre accessToken:s'il expire soit on s'authentifie à nouveau on utilise notre refresh token pour avoir un nouvel access token
         String jwtAccessToken = JWT.create()
                                 .withSubject(user.getUsername())//username
-                                .withExpiresAt(new Date(System.currentTimeMillis()+5*60*1000))//l'expiration après 5 mins
+                                .withExpiresAt(new Date(System.currentTimeMillis()+JWTUtil.EXPIRE_ACCESS_TOKEN))//l'expiration après 5 mins
                                 .withIssuer(request.getRequestURL().toString()) //le nom de l'application ayant generée le token
                                 .withClaim("roles",user.getAuthorities().stream().map(ga -> ga.getAuthority()).collect(Collectors.toList()))//extraction des roles de l'utilisateur
                                 .sign(algorithm);//puis la signature
@@ -61,7 +62,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         //les infos du payload de notre refresh token:
         String jwtRefreshToken = JWT.create()
                                 .withSubject(user.getUsername())//username
-                                .withExpiresAt(new Date(System.currentTimeMillis()+20*60*1000))//l'expiration après 20 mins
+                                .withExpiresAt(new Date(System.currentTimeMillis()+4*JWTUtil.EXPIRE_ACCESS_TOKEN))//l'expiration après 20 mins
                                 .withIssuer(request.getRequestURL().toString()) //le nom de l'application ayant generée le token
                                 .sign(algorithm);//puis la signature
         //envoyer nos token dans une map
