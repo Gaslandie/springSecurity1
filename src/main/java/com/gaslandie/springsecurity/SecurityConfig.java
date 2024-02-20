@@ -6,7 +6,7 @@ import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,10 +25,13 @@ import com.gaslandie.springsecurity.services.AccountService;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
     @Autowired
     private AccountService accountService;
-    @Autowired
+
+    @Bean
+    AuthenticationManager authenticationManager(HttpSecurity http) throws Exception{
+        return http.getSharedObject(AuthenticationManagerBuilder.class).build();
+    }
     //configure le gestionnaire d'authentification
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception{
         auth.userDetailsService(new UserDetailsService() {
@@ -54,12 +57,7 @@ public class SecurityConfig {
                                         .requestMatchers("/h2-console/**").permitAll()//pouvoir acceder à mon h2Console
                                         .anyRequest().authenticated())
                                      .sessionManagement(dsl -> dsl.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//on declare officiellement qu'on veut utiliser l'authentification stateless
+                                     .addFilter(new JwtAuthenticationFilter(authenticationManager(null)))
                                      .build();
     }
-    // SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
-    //     http.csrf(csrf -> csrf.disable());
-    //     http.headers(headers -> headers.frameOptions().disable());
-    //     http.authorizeRequests(requests -> requests.anyRequest().authenticated());
-    //     return http.build();
-    // }
 }
