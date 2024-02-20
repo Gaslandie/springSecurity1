@@ -6,6 +6,7 @@ import java.util.Collection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -58,6 +59,8 @@ public class SecurityConfig {
                                      .headers(headers -> headers.frameOptions().disable())
                                      .authorizeHttpRequests(request -> request
                                         .requestMatchers("/h2-console/**").permitAll()//pouvoir acceder à mon h2Console
+                                        //.requestMatchers(HttpMethod.POST,"/users/**").hasAuthority("ADMIN")//seuls les admins peuvent ajouter un utilisateur
+                                        //.requestMatchers(HttpMethod.GET,"/users/**").hasAuthority("USER")//un simple user peut voir les users
                                         .anyRequest().authenticated())
                                      .sessionManagement(dsl -> dsl.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//on declare officiellement qu'on veut utiliser l'authentification stateless
                                      .addFilter(new JwtAuthenticationFilter(authenticationManager(null)))

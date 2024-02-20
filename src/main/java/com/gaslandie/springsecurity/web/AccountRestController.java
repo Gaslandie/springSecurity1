@@ -10,6 +10,7 @@ import lombok.Data;
 
 import java.util.List;
 
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,11 +27,13 @@ public class AccountRestController {
     }
     //recuper tous les utilisateurs
     @GetMapping("/users")
+    @PostAuthorize("hasAutority('USER')")
     public List<AppUser> appUsers() {
         return accountService.listUsers();
     }
     //ajouter un utilisateur
     @PostMapping("/users")
+    @PostAuthorize("hasAutority('ADMIN')")
     public AppUser saveUser(@RequestBody AppUser appUser) { 
         return accountService.addNewUser((appUser));
     }

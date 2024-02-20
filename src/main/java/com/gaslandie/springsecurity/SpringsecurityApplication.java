@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -14,6 +15,8 @@ import com.gaslandie.springsecurity.entities.AppUser;
 import com.gaslandie.springsecurity.services.AccountService;
 
 @SpringBootApplication
+// @EnableGlobalMethodSecurity(prePostEnabled = true,securedEnabled = true), deprecié
+@EnableMethodSecurity(prePostEnabled = true,securedEnabled = true)//une autre façon pour gerer l'autorisation,
 public class SpringsecurityApplication {
 
 	public static void main(String[] args) {

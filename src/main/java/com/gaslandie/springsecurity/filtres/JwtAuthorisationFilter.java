@@ -6,6 +6,8 @@ import java.util.Collection;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.auth0.jwt.JWT;
@@ -21,7 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthorisationFilter  extends OncePerRequestFilter{
     //a chaque fois qu'il ya une requete qui arrive
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain){
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException{
         //recuperation de notre token d'autorisation s'il yen a
         String authorizationToken = request.getHeader("Authorization");
         if(authorizationToken != null && authorizationToken.startsWith("Bearer ")){
@@ -32,13 +34,22 @@ public class JwtAuthorisationFilter  extends OncePerRequestFilter{
                 JWTVerifier jwtVerifier = JWT.require(algorithm).build();//pour pouvoir verifier la validité de notre token
                 DecodedJWT decodedJWT = jwtVerifier.verify(jwt);
                 String username = decodedJWT.getSubject();//car le subject est le username dans notre token
-                Collection<GrantedAuthority> authorities = new ArrayList<>();
                 String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
-                UsernamePasswordAuthenticationToken UsernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(username,null);
+                Collection<GrantedAuthority> authorities = new ArrayList<>();
+                for(String r:roles){
+                    authorities.add(new SimpleGrantedAuthority(r));
+                }
+                UsernamePasswordAuthenticationToken authenticationToken = 
+                                new UsernamePasswordAuthenticationToken(username,null,authorities);
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);//ajout dans spring context
+                filterChain.doFilter(request, response);//passer au filtre suivant comme les middlewares dans nodejs
             }catch (Exception e) {
-            // TODO: handle exception
+                response.setHeader("error-message", e.getMessage());
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
            }
             
+        }else{
+            filterChain.doFilter(request, response);
         }
     }
     
