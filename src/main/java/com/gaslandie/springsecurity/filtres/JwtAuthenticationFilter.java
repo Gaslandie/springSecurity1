@@ -1,4 +1,4 @@
-package com.gaslandie.springsecurity;
+package com.gaslandie.springsecurity.filtres;
 
 import java.io.IOException;
 import java.util.Date;
@@ -48,7 +48,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,Authentication authResult) throws IOException, ServletException {
         User user = (User)authResult.getPrincipal();//pour retourner l'utilisateur authentifié,on caste car getprincipal retourn un objet de type Object
         //generer le token après avoir chercher la bibliotheque auth0 jwt token depuis maeven
-        Algorithm algorithm = Algorithm.HMAC256("monCodeprive1589");
+        Algorithm algorithm = Algorithm.HMAC256("cleprivee");
         //les infos du payload de notre accessToken
         String jwtAccessToken = JWT.create()
                                 .withSubject(user.getUsername())//username

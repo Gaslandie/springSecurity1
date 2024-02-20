@@ -18,8 +18,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.gaslandie.springsecurity.entities.AppUser;
+import com.gaslandie.springsecurity.filtres.JwtAuthenticationFilter;
+import com.gaslandie.springsecurity.filtres.JwtAuthorisationFilter;
 import com.gaslandie.springsecurity.services.AccountService;
 
 @Configuration
@@ -51,13 +54,14 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception{
         
         // http.formLogin(Customizer.withDefaults()); //pour avoir le formulaire d'authentification
-        return http.csrf(csrf -> csrf.disable())//car on veut utiliser l'authentification stateless
+        return http.csrf(csrf -> csrf.disable())//car on veut utiliser seulement l'authentification stateless pour le moment
                                      .headers(headers -> headers.frameOptions().disable())
                                      .authorizeHttpRequests(request -> request
                                         .requestMatchers("/h2-console/**").permitAll()//pouvoir acceder à mon h2Console
                                         .anyRequest().authenticated())
                                      .sessionManagement(dsl -> dsl.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//on declare officiellement qu'on veut utiliser l'authentification stateless
                                      .addFilter(new JwtAuthenticationFilter(authenticationManager(null)))
+                                     .addFilterBefore(new JwtAuthorisationFilter(), UsernamePasswordAuthenticationFilter.class)
                                      .build();
     }
 }
