@@ -21,15 +21,17 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+//OncePerRequestFilter est une classe abstraite fournie par Spring Security qui facilite la créatiton de filtres
+//de securité personalisés.Elle garantie que le filtre s'execute une fois par demande evitant ainsi toute execution redondante
 public class JwtAuthorisationFilter  extends OncePerRequestFilter{
     //a chaque fois qu'il ya une requete qui arrive
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException, ServletException{
         //recuperation de notre token d'autorisation
-        if(request.getServletPath().equals(JWTUtil.REFRESHPATH)){
+        if(request.getServletPath().equals(JWTUtil.REFRESHPATH)){//passer au filtre suivant si le path est = "/refresh"
             filterChain.doFilter(request, response);
         }else{
-
+            //sinon on recupere notre token
             String authorizationToken = request.getHeader(JWTUtil.AUTH_STRING);
             if(authorizationToken != null && authorizationToken.startsWith(JWTUtil.PREFIX_BEARER)){
     
@@ -37,11 +39,11 @@ public class JwtAuthorisationFilter  extends OncePerRequestFilter{
                     String jwt = authorizationToken.substring(7);//car notre jwt commencera à l'index 7
                     Algorithm algorithm = Algorithm.HMAC256(JWTUtil.SECRET);
                     JWTVerifier jwtVerifier = JWT.require(algorithm).build();//pour pouvoir verifier la validité de notre token
-                    DecodedJWT decodedJWT = jwtVerifier.verify(jwt);
+                    DecodedJWT decodedJWT = jwtVerifier.verify(jwt);//verification
                     String username = decodedJWT.getSubject();//car le subject est le username dans notre token
-                    String[] roles = decodedJWT.getClaim("roles").asArray(String.class);
+                    String[] roles = decodedJWT.getClaim("roles").asArray(String.class);//recuperation des roles
                     Collection<GrantedAuthority> authorities = new ArrayList<>();
-                    for(String r:roles){
+                    for(String r:roles){//pour chanque role
                         authorities.add(new SimpleGrantedAuthority(r));
                     }
                     UsernamePasswordAuthenticationToken authenticationToken = 

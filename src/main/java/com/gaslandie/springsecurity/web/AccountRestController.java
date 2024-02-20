@@ -7,14 +7,14 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.gaslandie.springsecurity.JWTUtil;
+import com.gaslandie.springsecurity.RoleUserForm;
 import com.gaslandie.springsecurity.entities.AppRole;
 import com.gaslandie.springsecurity.entities.AppUser;
 import com.gaslandie.springsecurity.services.AccountService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.Data;
-
 import java.io.IOException;
 import java.security.Principal;
 import java.util.Date;
@@ -28,30 +28,31 @@ import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 
-
-
-
+//reception des requetes,envoie de reponses via notre restController
 @RestController
 public class AccountRestController {
+    //va faire appel à accountService
     private AccountService accountService;
 
+    
     //constructeur pour l'injection des dependences au lieu d'utiliser autowired
     public AccountRestController(AccountService accountService) {
         this.accountService = accountService;
     }
+
     //recuper tous les utilisateurs
     @GetMapping("/users")
-    @PostAuthorize("hasAutority('USER')")
+    @PostAuthorize("hasAutority('USER')")//un simple user peut recuperer les utilisateurs
     public List<AppUser> appUsers() {
         return accountService.listUsers();
     }
+
     //ajouter un utilisateur
     @PostMapping("/users")
-    @PostAuthorize("hasAutority('ADMIN')")
+    @PostAuthorize("hasAutority('ADMIN')")//seul un admin peut ajouter un utilisateur
     public AppUser saveUser(@RequestBody AppUser appUser) { 
         return accountService.addNewUser((appUser));
     }
@@ -63,13 +64,17 @@ public class AccountRestController {
     }
     //ajouter un role à un utilisateur
     @PostMapping("/addRoleToUser")
-    public void addRoleToUser(@RequestBody RoleUserForm roleUserForm) {
+    @PostAuthorize("hasAutority('ADMIN')")//seul un admin peut ajouter un role à un utilisateur
+    public void addRoleToUser(@RequestBody RoleUserForm  roleUserForm) {
         accountService.addRoleToUser(roleUserForm.getUsername(), roleUserForm.getRolename());
     }
     //pour refresh notre token d'access,creer un nouvel access token
+    //lorsque le token d'access, expire, on peut soit en genere un nouveau ou utilisser le refresh pour demande un nouveau token d'accès
     @GetMapping("/refresh")
     public void refreshToken(HttpServletRequest request,HttpServletResponse response) throws IOException {
+        //on recupere le token d'autorisation
         String authToken = request.getHeader("Authorization");
+        //Bearer etant le type de jeton
         if(authToken != null && authToken.startsWith("Bearer ")){
 
              try{
@@ -79,9 +84,10 @@ public class AccountRestController {
                 DecodedJWT decodedJWT = jwtVerifier.verify(jwt);
                 String username = decodedJWT.getSubject();//car le subject est le username dans notre token
                 AppUser appUser = accountService.loadUserByUsername(username);
+                //creation d'un nouveau token d'accès
                 String jwtAccessToken = JWT.create()
                                 .withSubject(appUser.getUsername())//username
-                                .withExpiresAt(new Date(System.currentTimeMillis()+5*60*1000))//l'expiration après 5 mins
+                                .withExpiresAt(new Date(System.currentTimeMillis()+JWTUtil.EXPIRE_ACCESS_TOKEN))//l'expiration après 5 mins
                                 .withIssuer(request.getRequestURL().toString()) //le nom de l'application ayant generée le token
                                 .withClaim("roles",appUser.getAppRoles().stream().map(r -> r.getRolename()).collect(Collectors.toList()))//extraction des roles de l'utilisateur
                                 .sign(algorithm);//puis la signature
@@ -95,10 +101,10 @@ public class AccountRestController {
                 response.sendError(HttpServletResponse.SC_FORBIDDEN);
            }
         }else{
-            throw new RuntimeException("refresh tokin required");
+            throw new RuntimeException("refresh token obligatoire");
         }
     }
-    //pour recuperer le profil  d'utilisateur authentifié
+    //pour recuperer le profil  de l'utilisateur actuellement authentifié
     @GetMapping("/profile")
     public AppUser profile(Principal principal) {
         return accountService.loadUserByUsername(principal.getName());
@@ -108,9 +114,3 @@ public class AccountRestController {
     
 }
 
-//class qu'on va utiliser pour recuperer notre username et rolename dans l'ajout du role à un utilisateur
-@Data //getter et setter avec lombok
-class RoleUserForm{
-    private String username;
-    private String rolename;
-}

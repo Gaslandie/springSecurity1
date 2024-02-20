@@ -5,8 +5,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -24,10 +22,18 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+//Lorsqu'un utilisateur soumet son nom username et password via un formulaire de connexion ces informations sont envoyées au serveur.
+//UsernamePasswordAuthenticationfilter intercepte la demande de connexion et extrait le nom d'utilissateur et le mot de passe du corps de la requete, ces infos
+//sont ensuite encapsulée dans UsernamePasswordAuthenticationToken.Cet objet est soumis à l'AuthenticationManager de Spring Security pour validation,qui utilise un
+//un UserDetailsService pour charger les details de l'utilisatteur basés sur le username fourni,si ces infos sont correctes,l'utilisateur est considéré comme authentifié 
+//et un objet Authentication est crée et stocké dans le contexte de securité
+
+
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-    @Autowired
+    // @Autowired
     private AuthenticationManager authenticationManager;
-    //injection par constructor plutot que par autowired
+
+    //injection par constructor 
     public JwtAuthenticationFilter(AuthenticationManager authenticationManager){
         this.authenticationManager = authenticationManager;
     }
@@ -37,17 +43,19 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         //on recupere le mot de passe et le nom d'utilisateur
         String username = request.getParameter("username");
         String password = request.getParameter("password");
-        System.out.println(username);
-        System.out.println(password);
+        // System.out.println(username);
+        // System.out.println(password);
         //on va les stocker dans un objet de type UsernamePasswordAuthenticationToken
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
         //retourner à spring manager cet objet
         return authenticationManager.authenticate(authenticationToken);
         }
-
+    
+        //en cas de succès lors de l'authentification
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain,Authentication authResult) throws IOException, ServletException {
-        User user = (User)authResult.getPrincipal();//pour retourner l'utilisateur authentifié,on caste car getprincipal retourn un objet de type Object
+        User user = (User)authResult.getPrincipal();//pour retourner l'utilisateur authentifié,on caste car getprincipal retourne un objet de type Object
+
         //generer le token après avoir chercher la bibliotheque auth0 jwt token depuis maeven
         Algorithm algorithm = Algorithm.HMAC256(JWTUtil.SECRET);
 
@@ -56,7 +64,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                 .withSubject(user.getUsername())//username
                                 .withExpiresAt(new Date(System.currentTimeMillis()+JWTUtil.EXPIRE_ACCESS_TOKEN))//l'expiration après 5 mins
                                 .withIssuer(request.getRequestURL().toString()) //le nom de l'application ayant generée le token
-                                .withClaim("roles",user.getAuthorities().stream().map(ga -> ga.getAuthority()).collect(Collectors.toList()))//extraction des roles de l'utilisateur
+                                .withClaim("roles",user.getAuthorities().stream().map(au -> au.getAuthority()).collect(Collectors.toList()))//extraction des roles de l'utilisateur
                                 .sign(algorithm);//puis la signature
 
         //les infos du payload de notre refresh token:
@@ -65,11 +73,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                 .withExpiresAt(new Date(System.currentTimeMillis()+4*JWTUtil.EXPIRE_ACCESS_TOKEN))//l'expiration après 20 mins
                                 .withIssuer(request.getRequestURL().toString()) //le nom de l'application ayant generée le token
                                 .sign(algorithm);//puis la signature
-        //envoyer nos token dans une map
+        //envoyer nos token via une map
         Map<String,String> idToken = new HashMap<>();
         idToken.put("access-token",jwtAccessToken);
         idToken.put("refresh-token", jwtRefreshToken);
         response.setContentType("application/json");
+
+        //ObjectMapper pour passer de java à json et vice versa
         new ObjectMapper().writeValue(response.getOutputStream(),idToken);
         //response.setHeader("Authorization", jwtAccessToken1);//mettre le token dans len tete de notre reponse envoyé au client
     }

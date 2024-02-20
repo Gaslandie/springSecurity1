@@ -12,7 +12,7 @@ import com.gaslandie.springsecurity.repo.AppRoleRepository;
 import com.gaslandie.springsecurity.repo.AppUserRepository;
 
 @Service
-@Transactional
+@Transactional //pour la gestion des transactions des methodes publics de cette classe
 public class AccountServiceImpl implements AccountService {
     
     private AppUserRepository appUserRepository;
@@ -20,12 +20,14 @@ public class AccountServiceImpl implements AccountService {
     private PasswordEncoder passwordEncoder;
     
 
+    //implementations des methodes de l'interface AccountService
+
     public AccountServiceImpl(AppUserRepository appUserRepository, AppRoleRepository appRoleRepository,PasswordEncoder passwordEncoder) {
         this.appUserRepository = appUserRepository;
         this.appRoleRepository = appRoleRepository;
         this.passwordEncoder = passwordEncoder;
     }
-
+    //ajout nouvel utilisateur
     @Override
     public AppUser addNewUser(AppUser appUser) {
         //bcrypt pour hasher nos password avant de sauvergarder dans la bd
@@ -33,24 +35,24 @@ public class AccountServiceImpl implements AccountService {
         appUser.setPassword(passwordEncoder.encode(pw));
         return appUserRepository.save(appUser);
     }
-
+    //ajout nouveau role
     @Override
     public AppRole addNewRole(AppRole appRole) {
-        return appRoleRepository.save(appRole);
+         return appRoleRepository.save(appRole);
     }
-
+    //ajout role a un utilisateur
     @Override
     public void addRoleToUser(String username, String rolename) {
         AppUser appUser = appUserRepository.findByUsername(username);
         AppRole appRole = appRoleRepository.findByRolename(rolename);
         appUser.getAppRoles().add(appRole);
     }
-
+    //recuperer un utilisateur
     @Override
     public AppUser loadUserByUsername(String username) {
         return appUserRepository.findByUsername(username);
     }
-
+    //tous les utilisateurs
     @Override
     public List<AppUser> listUsers() {
        return appUserRepository.findAll();

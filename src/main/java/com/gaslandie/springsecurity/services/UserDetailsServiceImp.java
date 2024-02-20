@@ -19,6 +19,8 @@ public class UserDetailsServiceImp implements UserDetailsService {
     public UserDetailsServiceImp(AccountService accountService) {
         this.accountService = accountService;
     }
+
+    //la seule methode à implementer
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
        AppUser appUser = accountService.loadUserByUsername(username);//recuperation du user depuis la base de données
