@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.prepost.PostAuthorize;
-
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,14 +45,15 @@ public class AccountRestController {
 
     //recuper tous les utilisateurs
     @GetMapping("/users")
-    @PostAuthorize("hasAutority('USER')")//un simple user peut recuperer les utilisateurs
+    // @PostAuthorize("hasAuthority('USER')")//un simple user peut recuperer les utilisateurs
+    @PreAuthorize("isAuthenticated()")
     public List<AppUser> appUsers() {
         return accountService.listUsers();
     }
 
     //ajouter un utilisateur
     @PostMapping("/users")
-    @PostAuthorize("hasAutority('ADMIN')")//seul un admin peut ajouter un utilisateur
+    @PostAuthorize("hasAuthority('ADMIN')")//seul un admin peut ajouter un utilisateur
     public AppUser saveUser(@RequestBody AppUser appUser) { 
         return accountService.addNewUser((appUser));
     }
@@ -64,7 +65,7 @@ public class AccountRestController {
     }
     //ajouter un role à un utilisateur
     @PostMapping("/addRoleToUser")
-    @PostAuthorize("hasAutority('ADMIN')")//seul un admin peut ajouter un role à un utilisateur
+    @PostAuthorize("hasAuthority('ADMIN')")//seul un admin peut ajouter un role à un utilisateur
     public void addRoleToUser(@RequestBody RoleUserForm  roleUserForm) {
         accountService.addRoleToUser(roleUserForm.getUsername(), roleUserForm.getRolename());
     }
@@ -109,8 +110,5 @@ public class AccountRestController {
     public AppUser profile(Principal principal) {
         return accountService.loadUserByUsername(principal.getName());
     }
-    
-    
-    
 }
 

@@ -16,20 +16,20 @@ import com.gaslandie.springsecurity.services.AccountService;
 
 @SpringBootApplication
 // @EnableGlobalMethodSecurity(prePostEnabled = true,securedEnabled = true), deprecié
-@EnableMethodSecurity(prePostEnabled = true,securedEnabled = true)//une autre façon pour gerer l'autorisation,
+@EnableMethodSecurity(prePostEnabled = true,securedEnabled = true)//une autre façon pour gerer l'autorisation
 public class SpringsecurityApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringsecurityApplication.class, args);
 	}
-	//@Bean pour mettre dans spring context,utilisation bcrypt pour nos mot de passe
+	//@Bean pour mettre dans spring context,utilisation bcrypt pour nos mots de passe
 	@Bean
 	PasswordEncoder passwordEncoder(){
 		return new BCryptPasswordEncoder();
 	}
 
 	@Bean
-	CommandLineRunner start(AccountService accountService){
+	CommandLineRunner start(AccountService accountService){//qui va s'executer au demarrage
 		return args -> {
 			//creation de roles
 			accountService.addNewRole(new AppRole(null,"USER"));

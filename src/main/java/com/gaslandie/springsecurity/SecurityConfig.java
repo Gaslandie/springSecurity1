@@ -43,13 +43,13 @@ public class SecurityConfig {
         return http.csrf(csrf -> csrf.disable())//car on veut utiliser seulement l'authentification stateless pour le moment
                                      .headers(headers -> headers.frameOptions().disable())
                                      .authorizeHttpRequests(request -> request
-                                        .requestMatchers("/h2-console/**","/refreshToken/**","/login/**").permitAll()//pouvoir acceder à mon h2Console
+                                        .requestMatchers("/h2-console/**","/refreshToken/**","/login/**","/**").permitAll()
                                         //.requestMatchers(HttpMethod.POST,"/users/**").hasAuthority("ADMIN")//seuls les admins peuvent ajouter un utilisateur
                                         //.requestMatchers(HttpMethod.GET,"/users/**").hasAuthority("USER")//un simple user peut voir les users
                                         .anyRequest().authenticated())
                                      .sessionManagement(dsl -> dsl.sessionCreationPolicy(SessionCreationPolicy.STATELESS))//on declare officiellement qu'on veut utiliser l'authentification stateless
-                                     .addFilter(new JwtAuthenticationFilter(authenticationManager(null)))
-                                     .addFilterBefore(new JwtAuthorisationFilter(), UsernamePasswordAuthenticationFilter.class)
+                                     .addFilter(new JwtAuthenticationFilter(authenticationManager(null)))//ajout du filtre d'authentification
+                                     .addFilterBefore(new JwtAuthorisationFilter(), UsernamePasswordAuthenticationFilter.class)//ajouter avant,le filtre d'autorisation
                                      .build();
     }
 }
